@@ -1,0 +1,67 @@
+<project name="WGA" default="build.dev" basedir=".">
+
+  <property file="etc/build.properties" />
+
+  <!-- set global properties for this build -->
+  <!--property name="src"   value="src"/>
+  <property name="build" value="build"/>
+  <property name="dist"  value="dist"/-->
+  
+  <target name="init">
+    <mkdir dir="${build.dir}"/>
+  </target>
+  
+  <target name="clean">
+    <delete dir="${build.dir}"/>
+  </target>
+  
+  <target name="clone.git" depends="init">  
+    <property file="etc/build.stage.properties" />
+
+    <!-- Initialize normal repository -->
+    <gitclone repository="${git.repo}" 
+              targetPath="${build.dir}" />
+              
+     <ftpdeploy host="${ftp.host}"
+               port="21"
+               username="${ftp.username}"
+               password="${ftp.password}"
+               dir="${ftp.dir}">
+      <fileset dir="${build.dir}/wp-content/themes/wga">
+        <include name="**"/>
+      </fileset>
+    </ftpdeploy>
+                 
+  </target>
+  
+  <target name="git2stage" depends="clone.git">
+  	<phingcall target="build.stage"/>
+  </target>
+  
+  <target name="build.stage">
+    <echo msg="Build WGA on staging" />	
+    <phingcall target="build">
+        <property file="etc/build.stage.properties" />
+    </phingcall>
+  </target>
+
+  <target name="build.dev">
+    <echo msg="Build WGA on development." />	
+    <phingcall target="build">
+        <property file="etc/build.dev.properties" />
+    </phingcall>
+  </target>
+
+  <target name="build">
+    <ftpdeploy host="${ftp.host}"
+               port="21"
+               username="${ftp.username}"
+               password="${ftp.password}"
+               dir="${ftp.dir}">
+      <fileset dir="${src.dir}">
+        <include name="**"/>
+      </fileset>
+    </ftpdeploy>
+  </target>
+  
+</project>
